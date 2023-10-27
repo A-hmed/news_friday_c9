@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:news_friday_c9/ui/screens/home/tabs/news/news_tabs_view_model.dart';
 import 'package:news_friday_c9/ui/widgets/error_view.dart';
 import 'package:news_friday_c9/ui/widgets/loading_widget.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../data/model/sources_response.dart';
 import 'news_list.dart';
 
 class NewsTab extends StatefulWidget {
@@ -29,27 +31,24 @@ class _NewsTabState extends State<NewsTab> {
 
   @override
   Widget build(BuildContext context) {
-
-    return ChangeNotifierProvider(
-      create: (_) => newsTabsViewModel,
-      child: Consumer<NewsTabsViewModel>(
-          builder: (context, viewModel, _){
-            Widget currentWidget = const SizedBox();
-            if (newsTabsViewModel.isLoading) {
-              currentWidget = const LoadingWidget();
-            } else if (newsTabsViewModel.sources.isNotEmpty) {
-              currentWidget = buildTabs();
-            } else if (newsTabsViewModel.errorMessage != null) {
-              currentWidget = ErrorView(message: newsTabsViewModel.errorMessage!);
-            }
-            return currentWidget;
+    return BlocBuilder<NewsTabsViewModel, dynamic>(
+        bloc: newsTabsViewModel,
+        builder: (context, state){
+          Widget currentWidget = const SizedBox();
+          if (state is NewsTabLoadingState) {
+            currentWidget = const LoadingWidget();
+          } else if (state is NewsTabSuccessState) {
+            currentWidget = buildTabs(state.sources);
+          } else  {
+            currentWidget = ErrorView(message: (state as NewsTabErrorState).errorMessage);
           }
-      ),
+          return currentWidget;
+        }
     );
   }
 
-  Widget buildTabs() => DefaultTabController(
-        length: newsTabsViewModel.sources.length,
+  Widget buildTabs(List<Source> sources) => DefaultTabController(
+        length: sources.length,
         child: Column(
           children: [
             const SizedBox(
@@ -62,15 +61,15 @@ class _NewsTabState extends State<NewsTab> {
                   currentTabIndex = index;
                   setState(() {});
                 },
-                tabs: newsTabsViewModel.sources
+                tabs: sources
                     .map((singleSource) => buildTabWidget(
                         singleSource.name ?? "",
                         currentTabIndex ==
-                            newsTabsViewModel.sources.indexOf(singleSource)))
+                            sources.indexOf(singleSource)))
                     .toList()),
             Expanded(
               child: TabBarView(
-                  children: newsTabsViewModel.sources
+                  children: sources
                       .map((singleSource) => NewsList(singleSource.id!))
                       .toList()),
             )
