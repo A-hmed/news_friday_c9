@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:news_friday_c9/data/api/api_manager.dart';
 import 'package:news_friday_c9/ui/screens/home/home_screen.dart';
+import 'package:news_friday_c9/ui/screens/home/tabs/news/news_tabs_view_model.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   runApp(const MyApp());
